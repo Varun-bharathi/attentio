@@ -57,7 +57,7 @@ const FacultyDashboard = () => {
             });
 
             const url = window.URL.createObjectURL(new Blob([res.data]));
-            const link = document.createElement('link');
+            const link = document.createElement('a'); // fixed: was 'link'
             link.href = url;
             link.setAttribute('download', `cs_roadmap_${category.toLowerCase()}.pdf`);
             document.body.appendChild(link);
