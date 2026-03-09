@@ -4,7 +4,7 @@ const path = require('path');
 let aiProcess = null;
 
 function startAI(onResult) {
-    const aiPath = path.join(__dirname, '..', 'ai_module', 'runner.py');
+    const aiPath = path.join(__dirname, 'ai_module', 'runner.py');
 
     console.log(`Starting AI runner using python from: ${aiPath}`);
 

@@ -2,16 +2,11 @@ const { Sequelize, DataTypes } = require('sequelize');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const sequelize = new Sequelize(
-    process.env.DB_NAME || 'attentio_db',
-    process.env.DB_USER || 'root',
-    process.env.DB_PASSWORD || '',
-    {
-        host: process.env.DB_HOST || 'localhost',
-        dialect: 'mysql',
-        logging: false
-    }
-);
+const sequelize = new Sequelize({
+    dialect: 'sqlite',
+    storage: './database.sqlite', // File where SQLite will store DB
+    logging: false
+});
 
 const User = sequelize.define('users', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
