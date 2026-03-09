@@ -55,7 +55,7 @@ function startAI(onResult) {
             isInstalling = true;
             if (aiProcess) aiProcess.kill(); // Kill the crashed python process
 
-            const pipProcess = spawn('python', ['-m', 'pip', 'install', installName]);
+            const pipProcess = spawn('python3', ['-m', 'pip', 'install', installName]);
 
             pipProcess.stdout.on('data', (d) => process.stdout.write(`[PIP] ${d}`));
             pipProcess.stderr.on('data', (d) => process.stderr.write(`[PIP Error] ${d}`));
