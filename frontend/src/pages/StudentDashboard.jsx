@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const StudentDashboard = () => {
     const [meetingLink, setMeetingLink] = useState('');
     const [error, setError] = useState('');
@@ -16,7 +18,7 @@ const StudentDashboard = () => {
         try {
             const token = localStorage.getItem('token');
             const res = await axios.post(
-                'http://localhost:8000/api/meeting/join',
+                `${API_URL}/meeting/join`,
                 { meeting_link: meetingLink },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

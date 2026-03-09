@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const FacultyDashboard = () => {
     const [meetings, setMeetings] = useState([]);
     const [title, setTitle] = useState('');
@@ -20,7 +22,7 @@ const FacultyDashboard = () => {
     const fetchMeetings = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('http://localhost:8000/api/meeting/active', {
+            const res = await axios.get(`${API_URL}/meeting/active`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setMeetings(res.data);
@@ -33,7 +35,7 @@ const FacultyDashboard = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post(`http://localhost:8000/api/meeting/create?title=${title}`, {}, {
+            const res = await axios.post(`${API_URL}/meeting/create?title=${title}`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setMeetings([...meetings, res.data]);
@@ -51,7 +53,7 @@ const FacultyDashboard = () => {
     const downloadRoadmap = async (category) => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get(`http://localhost:8000/api/analytics/roadmap?category=${category}`, {
+            const res = await axios.get(`${API_URL}/analytics/roadmap?category=${category}`, {
                 headers: { Authorization: `Bearer ${token}` },
                 responseType: 'blob' // Important for PDF downloads
             });
