@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
+import axios from 'axios';
 import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
 
 // Video component to handle remote streams
@@ -235,7 +236,24 @@ const MeetingRoom = () => {
         setJoinRequests(prev => prev.filter(req => req.sid !== sid));
     };
 
-    const handleLeave = () => {
+    const handleLeave = async () => {
+        if (isFaculty) {
+            try {
+                const token = localStorage.getItem('token');
+                // The API URL might be imported differently in this file, let's use the standard one
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+                await axios.post(`${API_URL}/meeting/end`, {
+                    meeting_link: meetingId,
+                    stats
+                }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                alert('Class Ended! Analysis PDF Report is being generated and sent to your email.');
+            } catch (err) {
+                console.error("Failed to end meeting properly:", err);
+            }
+        }
+
         if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
         if (socketRef.current) socketRef.current.disconnect();
         Object.values(peersRef.current).forEach(peer => peer.close());
@@ -253,6 +271,37 @@ const MeetingRoom = () => {
             Object.values(peersRef.current).forEach(peer => peer.close());
         };
     }, [isFaculty]);
+
+    // Keep track of latest stats for the interval without causing stale closures
+    const statsRef = useRef(stats);
+    useEffect(() => {
+        statsRef.current = stats;
+    }, [stats]);
+
+    // Check-in interval: Every 10 minutes send mid-session analytics
+    useEffect(() => {
+        let intervalId;
+        if (isFaculty) {
+            intervalId = setInterval(async () => {
+                try {
+                    const token = localStorage.getItem('token');
+                    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+                    await axios.post(`${API_URL}/meeting/report`, {
+                        meeting_link: meetingId,
+                        stats: statsRef.current
+                    }, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    console.log('Automated 10-minute mid-session report triggered & sent to mail.');
+                } catch (err) {
+                    console.error("Failed to trigger automated mid-session report:", err);
+                }
+            }, 600000); // 10 minutes = 600,000 ms
+        }
+        return () => {
+            if (intervalId) clearInterval(intervalId);
+        };
+    }, [isFaculty, meetingId]);
 
     // Student UI flow logic
     if (!isFaculty && !hasConsented) {

@@ -11,8 +11,15 @@ function startAI(onResult) {
 
     console.log(`Starting AI runner using python from: ${aiPath}`);
 
+    // Pass environment variables to suppress TensorFlow warnings
+    const aiEnv = {
+        ...process.env,
+        TF_ENABLE_ONEDNN_OPTS: '0',
+        TF_CPP_MIN_LOG_LEVEL: '3' // Suppress INFO and WARNING logs from TF C++ Core
+    };
+
     // Use 'python' or 'python3' based on environment, '-u' means unbuffered
-    aiProcess = spawn('python', ['-u', aiPath]);
+    aiProcess = spawn('python', ['-u', aiPath], { env: aiEnv });
 
     aiProcess.stdout.on('data', (data) => {
         const lines = data.toString().split('\n');
@@ -34,6 +41,16 @@ function startAI(onResult) {
 
     aiProcess.stderr.on('data', (data) => {
         const stderrOutput = data.toString();
+
+        // Suppress noisy TensorFlow/MediaPipe C++ warnings for much cleaner logs
+        if (stderrOutput.includes('tensorflow/core') ||
+            stderrOutput.includes('oneDNN') ||
+            stderrOutput.includes('XNNPACK') ||
+            stderrOutput.includes('inference_feedback_manager') ||
+            stderrOutput.includes('InitializeLog')) {
+            return; // Ignore and do not print these specific non-fatal C++ warnings
+        }
+
         // Still print the actual error to console 
         console.error('[AI Module STDERR]:', stderrOutput);
 
