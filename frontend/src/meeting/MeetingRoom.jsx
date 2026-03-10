@@ -92,7 +92,13 @@ const MeetingRoom = () => {
             streamRef.current = stream;
             if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
-            socketRef.current = io('http://localhost:8000', { transports: ['websocket'] });
+            // Immediately show waiting screen for students to prevent UI flashing
+            if (!isFaculty) setIsWaiting(true);
+
+            // Connect using dynamic URL from env
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+            const SOCKET_URL = API_URL.replace('/api', '');
+            socketRef.current = io(SOCKET_URL, { transports: ['websocket'] });
 
             // Setup Socket Listeners
             socketRef.current.on('connect', () => {
@@ -102,7 +108,6 @@ const MeetingRoom = () => {
                     setInMeeting(true);
                 } else {
                     // Student hits the waiting room
-                    setIsWaiting(true);
                     socketRef.current.emit('join_request', { meeting_link: meetingId, user });
                 }
             });
