@@ -31,6 +31,11 @@ You need to create a `.env` file in the `backend` directory with the following c
 # Security
 SECRET_KEY=super-secret-key-12345
 PORT=8000
+
+# Email Delivery (for automatic PDF reports)
+SMTP_USER=your-email@gmail.com
+SMTP_PASS="your-16-character-app-password"
+SMTP_TO=recipient@gmail.com
 ```
 *(Note: Database connection strings like DB_HOST, DB_USER, etc., are no longer needed because the project uses SQLite, which automatically creates a local `database.sqlite` file).*
 
@@ -50,7 +55,7 @@ cd backend
 npm install
 
 # Install the required Python dependencies for the AI Module
-pip install opencv-python numpy mediapipe deepface "protobuf<4" tensorflow
+pip install opencv-python "numpy<2.0.0" pandas mediapipe deepface "protobuf<4" tensorflow
 
 # Start the Node.js backend (with nodemon for auto-restarts)
 npm run dev
@@ -81,6 +86,7 @@ npm run dev
 - **AI Attention Engine**: Real-time distraction detection utilizing bounding volume techniques via MediaPipe. Student video frames are sampled locally, securely transmitted via WebSockets to the Node backend, passed to the Python module, processed instantly in memory, and immediately discarded—ensuring strict privacy compliance.
 - **Scalability**: Employs a decoupled Socket.IO handler alongside RESTful routes, allowing connection pooling and clean, scalable real-time events.
 - **Privacy Controls**: Students will not see their own or others' attention metrics. Faculty hosts exclusively receive aggregated live statistics, keeping monitoring both effective and private.
+- **Automated Class Reports**: Automatically generates and immediately emails comprehensive PDF engagement reports to faculty using Nodemailer and PDFKit at both mid-session and class conclusion.
 - **Self-Contained Database**: Switched to SQLite, removing the need to manage external SQL servers or local database setups.
 
 ---
