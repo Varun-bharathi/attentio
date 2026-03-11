@@ -212,7 +212,7 @@ router.post('/report', authMiddleware, async (req, res) => {
                         from: process.env.SMTP_USER,
                         to: process.env.SMTP_TO || req.user.email,
                         subject: `Attentio: Mid-Session Score Report for Class ${meeting_link.substring(0, 8)}`,
-                        text: `Dear Faculty,\n\nPlease find attached the mid-session Attention Analytics Report for your ongoing class (${meeting_link}).\n\nThis is an automated 10-minute update.\n\nBest regards,\nAttentio AI System`,
+                        text: `Dear Faculty,\n\nPlease find attached the mid-session Attention Analytics Report for your ongoing class (${meeting_link}).\n\nThis is an automated 1-minute update.\n\nBest regards,\nAttentio AI System`,
                         attachments: [
                             {
                                 filename: `report_${meeting_link}_mid.pdf`,

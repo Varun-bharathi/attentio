@@ -292,7 +292,7 @@ const MeetingRoom = () => {
         statsRef.current = stats;
     }, [stats]);
 
-    // Check-in interval: Every 10 minutes send mid-session analytics
+    // Check-in interval: Every 1 minute send mid-session analytics
     useEffect(() => {
         let intervalId;
         if (isFaculty) {
@@ -306,11 +306,11 @@ const MeetingRoom = () => {
                     }, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
-                    console.log('Automated 10-minute mid-session report triggered & sent to mail.');
+                    console.log('Automated 1-minute mid-session report triggered & sent to mail.');
                 } catch (err) {
                     console.error("Failed to trigger automated mid-session report:", err);
                 }
-            }, 600000); // 10 minutes = 600,000 ms
+            }, 60000); // 1 minute = 60,000 ms
         }
         return () => {
             if (intervalId) clearInterval(intervalId);
