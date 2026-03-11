@@ -11,7 +11,7 @@ const RemoteVideo = ({ stream, name, userStats }) => {
         if (ref.current && stream) {
             ref.current.srcObject = stream;
         }
-    }, [stream]);
+    }); // Run without dependency array to ensure the ref is handled even on re-renders where stream hasn't changed but component re-mounted
 
     return (
         <div className="relative bg-gray-900 rounded-xl flex items-center justify-center shadow-inner overflow-hidden border border-gray-800">
@@ -276,6 +276,15 @@ const MeetingRoom = () => {
             Object.values(peersRef.current).forEach(peer => peer.close());
         };
     }, [isFaculty]);
+
+    // Make sure local video is attached when it renders.
+    // This fixes the bug where the student's own video stream wasn't visible
+    // once they were admitted from the waiting room.
+    useEffect(() => {
+        if (localVideoRef.current && streamRef.current && localVideoRef.current.srcObject !== streamRef.current) {
+            localVideoRef.current.srcObject = streamRef.current;
+        }
+    }); // Runs after every render to catch the transition out of the waiting room
 
     // Keep track of latest stats for the interval without causing stale closures
     const statsRef = useRef(stats);
