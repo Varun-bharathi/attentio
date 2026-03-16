@@ -110,9 +110,14 @@ router.post('/end', authMiddleware, async (req, res) => {
         writeStream.on('finish', async () => {
             const nodemailer = require('nodemailer');
             try {
+                console.log('[Email] Attempting to send END-SESSION report...');
+                console.log('[Email] SMTP_USER:', process.env.SMTP_USER);
+                console.log('[Email] SMTP_TO:', process.env.SMTP_TO || req.user.email);
+                console.log('[Email] SMTP_PASS set?', !!process.env.SMTP_PASS);
+
                 // Configure nodemailer
                 const transporter = nodemailer.createTransport({
-                    service: 'gmail', // Assuming gmail like in the python script. This can be adapted based on SMTP_SERVER
+                    service: 'gmail',
                     auth: {
                         user: process.env.SMTP_USER,
                         pass: process.env.SMTP_PASS
@@ -120,7 +125,7 @@ router.post('/end', authMiddleware, async (req, res) => {
                 });
 
                 if (!process.env.SMTP_PASS) {
-                    console.error("Disclaimer: SMTP_PASS is missing in your .env. Email will NOT be sent. Skipping...");
+                    console.error("[Email] SMTP_PASS is missing in .env. Email will NOT be sent.");
                 } else {
                     const mailOptions = {
                         from: process.env.SMTP_USER,
@@ -136,12 +141,12 @@ router.post('/end', authMiddleware, async (req, res) => {
                     };
 
                     await transporter.sendMail(mailOptions);
-                    console.log('Email sent successfully using NodeMailer!');
+                    console.log('[Email] End-session email sent successfully to', mailOptions.to);
                 }
             } catch (err) {
-                console.error(`[NodeMailer Error] Failed to send email:`, err);
+                console.error(`[Email] Failed to send end-session email:`, err.message);
+                console.error(`[Email] Full error:`, err);
             } finally {
-                // Optionally delete the generated PDF after sending
                 fs.unlink(pdfPath, () => { });
                 res.json({ message: "Meeting ended and report processed!" });
             }
@@ -197,6 +202,11 @@ router.post('/report', authMiddleware, async (req, res) => {
         writeStream.on('finish', async () => {
             const nodemailer = require('nodemailer');
             try {
+                console.log('[Email] Attempting to send MID-SESSION report...');
+                console.log('[Email] SMTP_USER:', process.env.SMTP_USER);
+                console.log('[Email] SMTP_TO:', process.env.SMTP_TO || req.user.email);
+                console.log('[Email] SMTP_PASS set?', !!process.env.SMTP_PASS);
+
                 const transporter = nodemailer.createTransport({
                     service: 'gmail',
                     auth: {
@@ -206,7 +216,7 @@ router.post('/report', authMiddleware, async (req, res) => {
                 });
 
                 if (!process.env.SMTP_PASS) {
-                    console.error("Disclaimer: SMTP_PASS is missing in your .env. Email will NOT be sent.");
+                    console.error("[Email] SMTP_PASS is missing in .env. Email will NOT be sent.");
                 } else {
                     const mailOptions = {
                         from: process.env.SMTP_USER,
@@ -222,10 +232,11 @@ router.post('/report', authMiddleware, async (req, res) => {
                     };
 
                     await transporter.sendMail(mailOptions);
-                    console.log('Mid-session email sent successfully using NodeMailer!');
+                    console.log('[Email] Mid-session email sent successfully to', mailOptions.to);
                 }
             } catch (err) {
-                console.error(`[NodeMailer Error] Failed to send email:`, err);
+                console.error(`[Email] Failed to send mid-session email:`, err.message);
+                console.error(`[Email] Full error:`, err);
             } finally {
                 fs.unlink(pdfPath, () => { });
                 res.json({ message: "Mid-session report processed!" });
