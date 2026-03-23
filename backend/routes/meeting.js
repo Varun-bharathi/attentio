@@ -92,38 +92,35 @@ router.post('/end', authMiddleware, async (req, res) => {
         }
         reportText += `Best regards,\nAttentio AI System`;
 
-        const nodemailer = require('nodemailer');
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbzSIkswXldZ7Jl1I6Ocz0oFwGGONDG_HwuovGr8j2iiBb-lSfZR64AV5mdwY1EhjKM/exec';
+        
         try {
-            console.log('[Email] Attempting to send END-SESSION report...');
-            console.log('[Email] SMTP_USER:', process.env.SMTP_USER);
-            console.log('[Email] SMTP_TO:', process.env.SMTP_TO || req.user.email);
-            console.log('[Email] SMTP_PASS set?', !!process.env.SMTP_PASS);
+            console.log('[Webhook] Attempting to send END-SESSION report to Google Sheets...');
+            
+            const payload = {
+                meeting_title: meeting.title,
+                meeting_link: meeting_link,
+                faculty_email: req.user.email,
+                report_type: 'End-Session',
+                report_text: reportText,
+                stats: stats
+            };
 
-            // Configure nodemailer
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.SMTP_USER,
-                    pass: process.env.SMTP_PASS
-                }
+            const response = await fetch(scriptUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
             });
 
-            if (!process.env.SMTP_PASS) {
-                console.error("[Email] SMTP_PASS is missing in .env. Email will NOT be sent.");
+            if (response.ok) {
+                console.log('[Webhook] End-session report sent successfully to Google Sheets.');
             } else {
-                const mailOptions = {
-                    from: process.env.SMTP_USER,
-                    to: process.env.SMTP_TO || req.user.email,
-                    subject: `Attentio: Automated Score Report for Class ${meeting.title}`,
-                    text: reportText
-                };
-
-                await transporter.sendMail(mailOptions);
-                console.log('[Email] End-session email sent successfully to', mailOptions.to);
+                console.error('[Webhook] Failed to send end-session report. Status:', response.status);
             }
         } catch (err) {
-            console.error(`[Email] Failed to send end-session email:`, err.message);
-            console.error(`[Email] Full error:`, err);
+            console.error(`[Webhook] Failed to send end-session report:`, err.message);
         } finally {
             res.json({ message: "Meeting ended and report processed!" });
         }
@@ -161,37 +158,35 @@ router.post('/report', authMiddleware, async (req, res) => {
         }
         reportText += `Best regards,\nAttentio AI System`;
 
-        const nodemailer = require('nodemailer');
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbzSIkswXldZ7Jl1I6Ocz0oFwGGONDG_HwuovGr8j2iiBb-lSfZR64AV5mdwY1EhjKM/exec';
+        
         try {
-            console.log('[Email] Attempting to send MID-SESSION report...');
-            console.log('[Email] SMTP_USER:', process.env.SMTP_USER);
-            console.log('[Email] SMTP_TO:', process.env.SMTP_TO || req.user.email);
-            console.log('[Email] SMTP_PASS set?', !!process.env.SMTP_PASS);
+            console.log('[Webhook] Attempting to send MID-SESSION report to Google Sheets...');
+            
+            const payload = {
+                meeting_title: meeting.title,
+                meeting_link: meeting_link,
+                faculty_email: req.user.email,
+                report_type: 'Mid-Session',
+                report_text: reportText,
+                stats: stats
+            };
 
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.SMTP_USER,
-                    pass: process.env.SMTP_PASS
-                }
+            const response = await fetch(scriptUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
             });
 
-            if (!process.env.SMTP_PASS) {
-                console.error("[Email] SMTP_PASS is missing in .env. Email will NOT be sent.");
+            if (response.ok) {
+                console.log('[Webhook] Mid-session report sent successfully to Google Sheets.');
             } else {
-                const mailOptions = {
-                    from: process.env.SMTP_USER,
-                    to: process.env.SMTP_TO || req.user.email,
-                    subject: `Attentio: Mid-Session Score Report for Class ${meeting.title}`,
-                    text: reportText
-                };
-
-                await transporter.sendMail(mailOptions);
-                console.log('[Email] Mid-session email sent successfully to', mailOptions.to);
+                console.error('[Webhook] Failed to send mid-session report. Status:', response.status);
             }
         } catch (err) {
-            console.error(`[Email] Failed to send mid-session email:`, err.message);
-            console.error(`[Email] Full error:`, err);
+            console.error(`[Webhook] Failed to send mid-session report:`, err.message);
         } finally {
             res.json({ message: "Mid-session report processed!" });
         }
