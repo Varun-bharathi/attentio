@@ -98,7 +98,7 @@ router.post('/end', authMiddleware, async (req, res) => {
             console.log('[Webhook] Attempting to send END-SESSION report to Google Sheets...');
             
             const payload = {
-                email: process.env.SMTP_TO || req.user.email,
+                email: req.user.email,
                 report: reportText
             };
 
@@ -160,7 +160,7 @@ router.post('/report', authMiddleware, async (req, res) => {
             console.log('[Webhook] Attempting to send MID-SESSION report to Google Sheets...');
             
             const payload = {
-                email: process.env.SMTP_TO || req.user.email,
+                email: req.user.email,
                 report: reportText
             };
 
