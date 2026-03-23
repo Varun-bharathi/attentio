@@ -77,80 +77,56 @@ router.post('/end', authMiddleware, async (req, res) => {
         meeting.status = 'ended';
         await meeting.save();
 
-        // Generate PDF report
-        const PDFDocument = require('pdfkit');
-        const fs = require('fs');
-        const path = require('path');
-        const { spawn } = require('child_process');
-
-        const pdfPath = path.join(__dirname, '..', `report_${meeting_link}.pdf`);
-        const doc = new PDFDocument({ margin: 50 });
-        const writeStream = fs.createWriteStream(pdfPath);
-        doc.pipe(writeStream);
-
-        doc.fontSize(24).fillColor('#4f46e5').text(`Class Analytics Report`, { align: 'center' });
-        doc.fontSize(14).fillColor('black').text(`Class Title: ${meeting.title}`, { align: 'center' });
-        doc.fontSize(12).fillColor('gray').text(`Meeting Link: ${meeting_link}`, { align: 'center' });
-        doc.moveDown(2);
+        let reportText = `Dear Faculty,\n\nHere is the comprehensive Attention Analytics Report for the recently concluded class session (${meeting.title} - ${meeting_link}).\n\n`;
 
         if (!stats || Object.keys(stats).length === 0) {
-            doc.fontSize(14).fillColor('black').text("No student analytics were recorded during this session.", { align: 'center' });
+            reportText += "No student analytics were recorded during this session.\n\n";
         } else {
             Object.values(stats).forEach(student => {
-                doc.fontSize(16).fillColor('#2563eb').text(`Student: ${student.name}`);
-                doc.fontSize(12).fillColor('black').text(`Average Attention Score: ${student.attention}%`);
-                doc.text(`Latest Posture: ${student.posture || 'N/A'}`);
-                doc.text(`Latest Gesture: ${student.gesture || 'N/A'}`);
-                doc.text(`Latest Expression & Gaze: ${student.emotion || student.gaze || 'N/A'}`);
-                doc.moveDown(1);
+                reportText += `Student: ${student.name}\n`;
+                reportText += `Average Attention Score: ${student.attention}%\n`;
+                reportText += `Latest Posture: ${student.posture || 'N/A'}\n`;
+                reportText += `Latest Gesture: ${student.gesture || 'N/A'}\n`;
+                reportText += `Latest Expression & Gaze: ${student.emotion || student.gaze || 'N/A'}\n\n`;
             });
         }
-        doc.end();
+        reportText += `Best regards,\nAttentio AI System`;
 
-        writeStream.on('finish', async () => {
-            const nodemailer = require('nodemailer');
-            try {
-                console.log('[Email] Attempting to send END-SESSION report...');
-                console.log('[Email] SMTP_USER:', process.env.SMTP_USER);
-                console.log('[Email] SMTP_TO:', process.env.SMTP_TO || req.user.email);
-                console.log('[Email] SMTP_PASS set?', !!process.env.SMTP_PASS);
+        const nodemailer = require('nodemailer');
+        try {
+            console.log('[Email] Attempting to send END-SESSION report...');
+            console.log('[Email] SMTP_USER:', process.env.SMTP_USER);
+            console.log('[Email] SMTP_TO:', process.env.SMTP_TO || req.user.email);
+            console.log('[Email] SMTP_PASS set?', !!process.env.SMTP_PASS);
 
-                // Configure nodemailer
-                const transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: {
-                        user: process.env.SMTP_USER,
-                        pass: process.env.SMTP_PASS
-                    }
-                });
-
-                if (!process.env.SMTP_PASS) {
-                    console.error("[Email] SMTP_PASS is missing in .env. Email will NOT be sent.");
-                } else {
-                    const mailOptions = {
-                        from: process.env.SMTP_USER,
-                        to: process.env.SMTP_TO || req.user.email,
-                        subject: `Attentio: Automated Score Report for Class ${meeting_link.substring(0, 8)}`,
-                        text: `Dear Faculty,\n\nPlease find attached the comprehensive Attention Analytics Report for the recently concluded class session (${meeting_link}).\n\nThis report contains the average attention scores and behavioral cues for all students present.\n\nBest regards,\nAttentio AI System`,
-                        attachments: [
-                            {
-                                filename: `report_${meeting_link}.pdf`,
-                                path: pdfPath
-                            }
-                        ]
-                    };
-
-                    await transporter.sendMail(mailOptions);
-                    console.log('[Email] End-session email sent successfully to', mailOptions.to);
+            // Configure nodemailer
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.SMTP_USER,
+                    pass: process.env.SMTP_PASS
                 }
-            } catch (err) {
-                console.error(`[Email] Failed to send end-session email:`, err.message);
-                console.error(`[Email] Full error:`, err);
-            } finally {
-                fs.unlink(pdfPath, () => { });
-                res.json({ message: "Meeting ended and report processed!" });
+            });
+
+            if (!process.env.SMTP_PASS) {
+                console.error("[Email] SMTP_PASS is missing in .env. Email will NOT be sent.");
+            } else {
+                const mailOptions = {
+                    from: process.env.SMTP_USER,
+                    to: process.env.SMTP_TO || req.user.email,
+                    subject: `Attentio: Automated Score Report for Class ${meeting.title}`,
+                    text: reportText
+                };
+
+                await transporter.sendMail(mailOptions);
+                console.log('[Email] End-session email sent successfully to', mailOptions.to);
             }
-        });
+        } catch (err) {
+            console.error(`[Email] Failed to send end-session email:`, err.message);
+            console.error(`[Email] Full error:`, err);
+        } finally {
+            res.json({ message: "Meeting ended and report processed!" });
+        }
 
     } catch (error) {
         res.status(500).json({ detail: error.message });
@@ -170,78 +146,55 @@ router.post('/report', authMiddleware, async (req, res) => {
             return res.status(404).json({ detail: "Meeting not found" });
         }
 
-        // Generate PDF report (Mid-Session)
-        const PDFDocument = require('pdfkit');
-        const fs = require('fs');
-        const path = require('path');
-
-        const pdfPath = path.join(__dirname, '..', `report_${meeting_link}_mid.pdf`);
-        const doc = new PDFDocument({ margin: 50 });
-        const writeStream = fs.createWriteStream(pdfPath);
-        doc.pipe(writeStream);
-
-        doc.fontSize(24).fillColor('#4f46e5').text(`Mid-Session Analytics Report`, { align: 'center' });
-        doc.fontSize(14).fillColor('black').text(`Class Title: ${meeting.title}`, { align: 'center' });
-        doc.fontSize(12).fillColor('gray').text(`Meeting Link: ${meeting_link}`, { align: 'center' });
-        doc.moveDown(2);
+        let reportText = `Dear Faculty,\n\nHere is the mid-session Attention Analytics Report for your ongoing class (${meeting.title} - ${meeting_link}).\n\nThis is an automated 1-minute update.\n\n`;
 
         if (!stats || Object.keys(stats).length === 0) {
-            doc.fontSize(14).fillColor('black').text("No student analytics were recorded so far.", { align: 'center' });
+            reportText += "No student analytics were recorded so far.\n\n";
         } else {
             Object.values(stats).forEach(student => {
-                doc.fontSize(16).fillColor('#2563eb').text(`Student: ${student.name}`);
-                doc.fontSize(12).fillColor('black').text(`Current Attention Score: ${student.attention}%`);
-                doc.text(`Latest Posture: ${student.posture || 'N/A'}`);
-                doc.text(`Latest Gesture: ${student.gesture || 'N/A'}`);
-                doc.text(`Latest Expression & Gaze: ${student.emotion || student.gaze || 'N/A'}`);
-                doc.moveDown(1);
+                reportText += `Student: ${student.name}\n`;
+                reportText += `Current Attention Score: ${student.attention}%\n`;
+                reportText += `Latest Posture: ${student.posture || 'N/A'}\n`;
+                reportText += `Latest Gesture: ${student.gesture || 'N/A'}\n`;
+                reportText += `Latest Expression & Gaze: ${student.emotion || student.gaze || 'N/A'}\n\n`;
             });
         }
-        doc.end();
+        reportText += `Best regards,\nAttentio AI System`;
 
-        writeStream.on('finish', async () => {
-            const nodemailer = require('nodemailer');
-            try {
-                console.log('[Email] Attempting to send MID-SESSION report...');
-                console.log('[Email] SMTP_USER:', process.env.SMTP_USER);
-                console.log('[Email] SMTP_TO:', process.env.SMTP_TO || req.user.email);
-                console.log('[Email] SMTP_PASS set?', !!process.env.SMTP_PASS);
+        const nodemailer = require('nodemailer');
+        try {
+            console.log('[Email] Attempting to send MID-SESSION report...');
+            console.log('[Email] SMTP_USER:', process.env.SMTP_USER);
+            console.log('[Email] SMTP_TO:', process.env.SMTP_TO || req.user.email);
+            console.log('[Email] SMTP_PASS set?', !!process.env.SMTP_PASS);
 
-                const transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: {
-                        user: process.env.SMTP_USER,
-                        pass: process.env.SMTP_PASS
-                    }
-                });
-
-                if (!process.env.SMTP_PASS) {
-                    console.error("[Email] SMTP_PASS is missing in .env. Email will NOT be sent.");
-                } else {
-                    const mailOptions = {
-                        from: process.env.SMTP_USER,
-                        to: process.env.SMTP_TO || req.user.email,
-                        subject: `Attentio: Mid-Session Score Report for Class ${meeting_link.substring(0, 8)}`,
-                        text: `Dear Faculty,\n\nPlease find attached the mid-session Attention Analytics Report for your ongoing class (${meeting_link}).\n\nThis is an automated 1-minute update.\n\nBest regards,\nAttentio AI System`,
-                        attachments: [
-                            {
-                                filename: `report_${meeting_link}_mid.pdf`,
-                                path: pdfPath
-                            }
-                        ]
-                    };
-
-                    await transporter.sendMail(mailOptions);
-                    console.log('[Email] Mid-session email sent successfully to', mailOptions.to);
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.SMTP_USER,
+                    pass: process.env.SMTP_PASS
                 }
-            } catch (err) {
-                console.error(`[Email] Failed to send mid-session email:`, err.message);
-                console.error(`[Email] Full error:`, err);
-            } finally {
-                fs.unlink(pdfPath, () => { });
-                res.json({ message: "Mid-session report processed!" });
+            });
+
+            if (!process.env.SMTP_PASS) {
+                console.error("[Email] SMTP_PASS is missing in .env. Email will NOT be sent.");
+            } else {
+                const mailOptions = {
+                    from: process.env.SMTP_USER,
+                    to: process.env.SMTP_TO || req.user.email,
+                    subject: `Attentio: Mid-Session Score Report for Class ${meeting.title}`,
+                    text: reportText
+                };
+
+                await transporter.sendMail(mailOptions);
+                console.log('[Email] Mid-session email sent successfully to', mailOptions.to);
             }
-        });
+        } catch (err) {
+            console.error(`[Email] Failed to send mid-session email:`, err.message);
+            console.error(`[Email] Full error:`, err);
+        } finally {
+            res.json({ message: "Mid-session report processed!" });
+        }
 
     } catch (error) {
         res.status(500).json({ detail: error.message });
