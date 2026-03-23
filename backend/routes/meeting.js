@@ -98,12 +98,8 @@ router.post('/end', authMiddleware, async (req, res) => {
             console.log('[Webhook] Attempting to send END-SESSION report to Google Sheets...');
             
             const payload = {
-                meeting_title: meeting.title,
-                meeting_link: meeting_link,
-                faculty_email: req.user.email,
-                report_type: 'End-Session',
-                report_text: reportText,
-                stats: stats
+                email: process.env.SMTP_TO || req.user.email,
+                report: reportText
             };
 
             const response = await fetch(scriptUrl, {
@@ -164,12 +160,8 @@ router.post('/report', authMiddleware, async (req, res) => {
             console.log('[Webhook] Attempting to send MID-SESSION report to Google Sheets...');
             
             const payload = {
-                meeting_title: meeting.title,
-                meeting_link: meeting_link,
-                faculty_email: req.user.email,
-                report_type: 'Mid-Session',
-                report_text: reportText,
-                stats: stats
+                email: process.env.SMTP_TO || req.user.email,
+                report: reportText
             };
 
             const response = await fetch(scriptUrl, {
