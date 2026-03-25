@@ -17,7 +17,7 @@ def decode_base64_frame(data: str):
 
 def analyze_frame(base64_data: str):
     """
-    Decodes the frame and calculates attention score based on posture, gesture, expression, and gaze.
+    Decodes the frame and calculates attention score based on robust new heuristics.
     Returns dictionary with detailed stats.
     """
     frame = decode_base64_frame(base64_data)
@@ -30,42 +30,52 @@ def analyze_frame(base64_data: str):
     emotion_gaze = analyze_emotion(rgb_frame)
     posture_gesture = analyze_posture(rgb_frame)
     
-    # Split the returned strings
     try:
         emotion, gaze = emotion_gaze.split(", ")
     except:
-        emotion, gaze = emotion_gaze, "unknown"
+        emotion, gaze = "neutral", "not detected"
         
     try:
         posture, gesture = posture_gesture.split(", ")
     except:
-        posture, gesture = posture_gesture, "unknown"
+        posture, gesture = "not detected", "no gesture"
 
     score = 100
     
-    # Penalties for posture
+    # 1. Posture Penalties (Heavy impact since it indicates gross physical distraction)
     if posture == "looking away":
-        score -= 40
+        score -= 50
+    elif posture == "looking down":
+        score -= 30
     elif posture == "not detected":
         score = 0
         
-    # Penalties for gaze
+    # 2. Gaze Penalties (Medium impact - glancing away is bad, but less severe than full head turn)
     if gaze in ["gazing left", "gazing right"]:
         score -= 20
-        
-    # Penalties for expression
-    if emotion == "yawning/talking":
-        score -= 25
-        
-    # Penalties/Bonuses for gesture
-    if gesture == "touching face":
+    elif gaze == "not detected" and posture != "not detected":
         score -= 10
+        
+    # 3. Emotion Variations (Nuanced impact)
+    # Deepface emotions: 'angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral'
+    if emotion in ["sad", "fear", "angry"]:
+        score -= 10  # Signifies confusion or frustration
+    elif emotion == "talking":
+        score -= 20  # Talking likely means distracted engagement
+    elif emotion == "happy":
+        score += 5   # Positive engagement
+
+    # 4. Gesture Impacts
+    if gesture == "touching face":
+        score -= 15  # Often indicates sleepiness, boredom, or leaning on hand
     elif gesture == "hand raised":
-        # Usually positive engagement but can mean distraction; neutral impact chosen
-        pass
+        score += 15  # Highly interactive and attentive!
+
+    # Normalization
+    final_score = max(0, min(100, score))
 
     return {
-        "attention": max(score, 0), 
+        "attention": final_score, 
         "emotion": emotion, 
         "gaze": gaze,
         "posture": posture,

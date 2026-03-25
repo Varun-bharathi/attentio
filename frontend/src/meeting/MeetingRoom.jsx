@@ -251,7 +251,7 @@ const MeetingRoom = () => {
                 }, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                alert('Class Ended! Analysis PDF Report is being generated and sent to your email.');
+                alert('Class Ended successfully!');
             } catch (err) {
                 console.error("Failed to end meeting properly:", err);
             }
@@ -284,41 +284,7 @@ const MeetingRoom = () => {
         }
     }); // Runs after every render to catch the transition out of the waiting room
 
-    // Keep track of latest stats for the interval without causing stale closures
-    const statsRef = useRef(stats);
-    useEffect(() => {
-        statsRef.current = stats;
-    }, [stats]);
 
-    // Check-in interval: Every 1 minute send student's own mid-session analytics to faculty
-    useEffect(() => {
-        let intervalId;
-        if (!isFaculty) {
-            intervalId = setInterval(async () => {
-                try {
-                    const token = localStorage.getItem('token');
-                    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-                    
-                    // Get only this student's stats
-                    const mySid = socketRef.current?.id;
-                    const myStats = mySid ? statsRef.current[mySid] : null;
-
-                    await axios.post(`${API_URL}/meeting/student-report`, {
-                        meeting_link: meetingId,
-                        stats: myStats
-                    }, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-                    console.log('Automated 1-minute mid-session student report sent to faculty mail.');
-                } catch (err) {
-                    console.error("Failed to trigger automated student report:", err);
-                }
-            }, 60000); // 1 minute = 60,000 ms
-        }
-        return () => {
-            if (intervalId) clearInterval(intervalId);
-        };
-    }, [isFaculty, meetingId]);
 
     // Student UI flow logic
     if (!isFaculty && !hasConsented) {

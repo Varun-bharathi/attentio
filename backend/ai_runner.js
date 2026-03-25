@@ -47,6 +47,9 @@ function startAI(onResult) {
             stderrOutput.includes('oneDNN') ||
             stderrOutput.includes('XNNPACK') ||
             stderrOutput.includes('inference_feedback_manager') ||
+            stderrOutput.includes('delegate for CPU') ||
+            stderrOutput.includes('WARNING:tensorflow:') ||
+            stderrOutput.includes('INFO:') ||
             stderrOutput.includes('InitializeLog')) {
             return; // Ignore and do not print these specific non-fatal C++ warnings
         }
@@ -72,7 +75,7 @@ function startAI(onResult) {
             isInstalling = true;
             if (aiProcess) aiProcess.kill(); // Kill the crashed python process
 
-            const pipProcess = spawn('python3', ['-m', 'pip', 'install', installName]);
+            const pipProcess = spawn('python', ['-m', 'pip', 'install', installName]);
 
             pipProcess.stdout.on('data', (d) => process.stdout.write(`[PIP] ${d}`));
             pipProcess.stderr.on('data', (d) => process.stderr.write(`[PIP Error] ${d}`));

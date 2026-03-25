@@ -53,7 +53,7 @@ router.get('/roadmap', authMiddleware, (req, res) => {
         doc.fontSize(12).fillColor('black').text('   - Frontend Frameworks: React.js (Hooks, Context) or Vue.js\n   - Backend: Node.js, Express.js architecture, RESTful APIs\n   - DBs & Auth: MongoDB (Mongoose), Postman, JWT, bcrypt');
         doc.moveDown();
         doc.fontSize(16).fillColor('#2563eb').text('Advanced Learner');
-        doc.fontSize(12).fillColor('black').text('   - Architecture: Next.js (SSR/SSG), Microservices\n   - State & API: Redux Toolkit, GraphQL, WebSockets (Socket.IO)\n   - DevOps: Docker, CI/CD pipelines, AWS/Vercel deployment');
+        doc.fontSize(12).fillColor('black').text('   - Architecture: Next.js (SSR/SSG), Microservices\n   - State & API: Redux Toolkit, GraphQL, WebSockets (Socket.IO)\n   - DevOps: Docker, CI/CD pipelines, AWS deployment');
     }
     else if (category === 'Fullstack_Python') {
         doc.fontSize(16).fillColor('#2563eb').text('Beginner Learner');

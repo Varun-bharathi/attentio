@@ -17,13 +17,14 @@ const StudentDashboard = () => {
     const joinMeeting = async () => {
         try {
             const token = localStorage.getItem('token');
+            const cleanLink = meetingLink.trim();
             const res = await axios.post(
                 `${API_URL}/meeting/join`,
-                { meeting_link: meetingLink },
+                { meeting_link: cleanLink },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if (res.data.meeting_id) {
-                navigate(`/meeting/${meetingLink}`);
+                navigate(`/meeting/${cleanLink}`);
             }
         } catch (err) {
             setError('Failed to join meeting. Please check the link.');

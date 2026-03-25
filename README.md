@@ -31,11 +31,6 @@ You need to create a `.env` file in the `backend` directory with the following c
 # Security
 SECRET_KEY=super-secret-key-12345
 PORT=8000
-
-# Email Delivery (for automated email reports)
-SMTP_USER=your-email@gmail.com
-SMTP_PASS="your-16-character-app-password"
-SMTP_TO=recipient@gmail.com
 ```
 *(Note: Database connection strings like DB_HOST, DB_USER, etc., are no longer needed because the project uses SQLite, which automatically creates a local `database.sqlite` file).*
 
@@ -93,8 +88,7 @@ npm run dev
 - **AI Attention Engine**: Real-time distraction detection utilizing bounding volume techniques via MediaPipe. Student video frames are sampled locally, securely transmitted via WebSockets to the Node backend, passed to the Python module, processed instantly in memory, and immediately discarded—ensuring strict privacy compliance.
 - **Scalability**: Employs a decoupled Socket.IO handler alongside RESTful routes, allowing connection pooling and clean, scalable real-time events.
 - **Privacy Controls**: Students will not see their own or others' attention metrics. Faculty hosts exclusively receive aggregated live statistics, keeping monitoring both effective and private.
-- **Automated Student Reporting**: The system is designed so that the student's interface actively tracks their engagement metrics and automatically emails individual, real-time mid-session reports *from the student directly to the faculty's registered email address*.
-- **End-of-Class Summaries**: Faculty hosts automatically receive comprehensive plain-text engagement summaries directly to their inbox as soon as they conclude a session. All email infrastructure is managed natively, entirely eliminating any reliance on external webhooks or Google Apps Scripts.
+
 - **Self-Contained Database**: Switched to SQLite, removing the need to manage external SQL servers or local database setups.
 
 ---
