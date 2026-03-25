@@ -94,27 +94,29 @@ router.post('/end', authMiddleware, async (req, res) => {
         reportText += `Best regards,\nAttentio AI System`;
 
         try {
-            console.log('[Email] Sending END-SESSION report directly via Nodemailer...');
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.SMTP_USER,
-                    pass: process.env.SMTP_PASS
-                }
+            const scriptUrl = 'https://script.google.com/macros/s/AKfycbwpxw6ql4JOW9HEvGfUFDH_OsJizlOdZ4JHqJi5YahUdb2wl6ahQgnTIKkFAzguFpM/exec';
+            console.log('[Webhook] Sending END-SESSION report to Google Apps Script...');
+            const payload = {
+                email: req.user.email,
+                report: reportText
+            };
+
+            const response = await fetch(scriptUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
 
-            await transporter.sendMail({
-                from: `"Attentio AI" <${process.env.SMTP_USER}>`,
-                to: req.user.email,
-                subject: `End of Class Analytics Report - ${meeting.title}`,
-                text: reportText
-            });
-
-            console.log('[Email] End-session report sent successfully.');
-            res.json({ message: "Meeting ended and report processed via email!" });
+            if (response.ok) {
+                console.log('[Webhook] End-session report sent successfully.');
+                res.json({ message: "Meeting ended and report processed via Webhook!" });
+            } else {
+                console.error('[Webhook] Failed to send end-session report. Status:', response.status);
+                res.status(500).json({ detail: "Meeting ended but failed to send webhook report" });
+            }
         } catch (err) {
-            console.error(`[Email] Failed to send end-session report:`, err.message);
-            res.status(500).json({ detail: "Meeting ended but failed to send email report" });
+            console.error(`[Webhook] Network error sending end-session report:`, err.message);
+            res.status(500).json({ detail: "Network error sending webhook report" });
         }
 
     } catch (error) {
@@ -151,27 +153,29 @@ router.post('/report', authMiddleware, async (req, res) => {
         reportText += `Best regards,\nAttentio AI System`;
 
         try {
-            console.log('[Email] Sending MID-SESSION report directly via Nodemailer...');
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.SMTP_USER,
-                    pass: process.env.SMTP_PASS
-                }
+            const scriptUrl = 'https://script.google.com/macros/s/AKfycbwpxw6ql4JOW9HEvGfUFDH_OsJizlOdZ4JHqJi5YahUdb2wl6ahQgnTIKkFAzguFpM/exec';
+            console.log('[Webhook] Sending MID-SESSION report to Google Apps Script...');
+            const payload = {
+                email: req.user.email,
+                report: reportText
+            };
+
+            const response = await fetch(scriptUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
 
-            await transporter.sendMail({
-                from: `"Attentio AI" <${process.env.SMTP_USER}>`,
-                to: req.user.email,
-                subject: `Mid-Session Analytics - ${meeting.title}`,
-                text: reportText
-            });
-
-            console.log('[Email] Mid-session report sent successfully.');
-            res.json({ message: "Mid-session report processed via email!" });
+            if (response.ok) {
+                console.log('[Webhook] Mid-session report sent successfully.');
+                res.json({ message: "Mid-session report processed via Webhook!" });
+            } else {
+                console.error('[Webhook] Failed to send mid-session report. Status:', response.status);
+                res.status(500).json({ detail: "Failed to send webhook report" });
+            }
         } catch (err) {
-            console.error(`[Email] Failed to send mid-session report:`, err.message);
-            res.status(500).json({ detail: "Failed to send email report" });
+            console.error(`[Webhook] Network error sending mid-session report:`, err.message);
+            res.status(500).json({ detail: "Network error sending webhook report" });
         }
 
     } catch (error) {
@@ -210,24 +214,27 @@ router.post('/student-report', authMiddleware, async (req, res) => {
         }
         reportText += `Best regards,\n${req.user.name}`;
 
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS
-            }
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbwpxw6ql4JOW9HEvGfUFDH_OsJizlOdZ4JHqJi5YahUdb2wl6ahQgnTIKkFAzguFpM/exec';
+        console.log('[Webhook] Sending student report to Google Apps Script...');
+        
+        const payload = {
+            email: faculty.email,
+            report: reportText
+        };
+
+        const response = await fetch(scriptUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
 
-        await transporter.sendMail({
-            from: `"${req.user.name}" <${process.env.SMTP_USER}>`,
-            replyTo: req.user.email,
-            to: faculty.email, 
-            subject: `Attention Analytics Update - ${req.user.name} (${meeting.title})`,
-            text: reportText
-        });
-
-        console.log(`[Email] Student report sent from ${req.user.email} to ${faculty.email}`);
-        res.json({ message: "Student report dynamically processed and sent!" });
+        if (response.ok) {
+            console.log(`[Webhook] Student report sent successfully via webhook for ${faculty.email}`);
+            res.json({ message: "Student report dynamically processed and sent via Webhook!" });
+        } else {
+            console.error('[Webhook] Failed to send student report. Status:', response.status);
+            res.status(500).json({ detail: "Failed to send student report via webhook" });
+        }
 
     } catch (error) {
         console.error(`[Email] Failed to send student report:`, error.message);
