@@ -183,9 +183,7 @@ const MeetingRoom = () => {
             });
 
             socketRef.current.on('attention_update', (data) => {
-                if (isFaculty) {
-                    setStats(prev => ({ ...prev, [data.sid]: { ...data.user, ...data.stats } }));
-                }
+                setStats(prev => ({ ...prev, [data.sid]: { ...data.user, ...data.stats } }));
             });
 
         } catch (err) {
@@ -292,23 +290,28 @@ const MeetingRoom = () => {
         statsRef.current = stats;
     }, [stats]);
 
-    // Check-in interval: Every 1 minute send mid-session analytics
+    // Check-in interval: Every 1 minute send student's own mid-session analytics to faculty
     useEffect(() => {
         let intervalId;
-        if (isFaculty) {
+        if (!isFaculty) {
             intervalId = setInterval(async () => {
                 try {
                     const token = localStorage.getItem('token');
                     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-                    await axios.post(`${API_URL}/meeting/report`, {
+                    
+                    // Get only this student's stats
+                    const mySid = socketRef.current?.id;
+                    const myStats = mySid ? statsRef.current[mySid] : null;
+
+                    await axios.post(`${API_URL}/meeting/student-report`, {
                         meeting_link: meetingId,
-                        stats: statsRef.current
+                        stats: myStats
                     }, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
-                    console.log('Automated 1-minute mid-session report triggered & sent to mail.');
+                    console.log('Automated 1-minute mid-session student report sent to faculty mail.');
                 } catch (err) {
-                    console.error("Failed to trigger automated mid-session report:", err);
+                    console.error("Failed to trigger automated student report:", err);
                 }
             }, 60000); // 1 minute = 60,000 ms
         }
