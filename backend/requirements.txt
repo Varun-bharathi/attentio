@@ -2,5 +2,4 @@ protobuf==3.20.3
 opencv-python 
 numpy<2.0.0
 pandas 
-mediapipe==0.10.32 
 deepface
