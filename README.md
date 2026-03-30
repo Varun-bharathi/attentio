@@ -3,7 +3,7 @@
 ## 📖 Project Overview
 Attentio is an advanced full-stack application designed to monitor and analyze student attention in real-time during online classes. The platform leverages artificial intelligence, computer vision, and real-time communication to provide educators with actionable insights into student engagement without compromising privacy.
 
-The system uses a React-based frontend for a seamless user experience, a Node.js and Express backend for robust API handling, and Socket.IO for real-time signaling. The core AI module processes video frames using OpenCV and MediaPipe (via a spawned Python process) to detect attention levels based on specific behavioral cues like posture and emotion.
+The system uses a React-based frontend for a seamless user experience, a Node.js and Express backend for robust API handling, and Socket.IO for real-time signaling. The core AI module processes video frames using OpenCV and MediaFFPipe (via a spawned Python process) to detect attention levels based on specific behavioral cues like posture and emotion.
 
 ---
 
@@ -62,7 +62,7 @@ cd backend
 npm install
 
 # Install the required Python dependencies for the AI Module
-pip install opencv-python "numpy<2.0.0" pandas mediapipe deepface "protobuf<4" tensorflow
+pip install opencv-python "numpy<2.0.0" pandas mediapipe==0.10.32 deepface "protobuf<4" tensorflow
 
 # Start the Node.js backend (with nodemon for auto-restarts)
 npm run dev
