@@ -3,5 +3,4 @@ opencv-python
 numpy<2.0.0
 pandas 
 mediapipe==0.10.32 
-deepface 
-tensorflow
+deepface
