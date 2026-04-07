@@ -45,6 +45,21 @@ const FacultyDashboard = () => {
         }
     };
 
+    const deleteMeeting = async (meeting_link) => {
+        if (!window.confirm("Are you sure you want to delete this meeting?")) return;
+        
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_URL}/meeting/${meeting_link}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setMeetings(meetings.filter(m => m.meeting_link !== meeting_link));
+        } catch (err) {
+            console.error(err);
+            alert("Failed to delete meeting.");
+        }
+    };
+
     const logout = () => {
         localStorage.clear();
         navigate('/');
@@ -117,6 +132,9 @@ const FacultyDashboard = () => {
                                         <Link to={`/meeting/${m.meeting_link}`} className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-semibold text-sm transition-colors text-center flex-1">
                                             Join Room
                                         </Link>
+                                        <button onClick={() => deleteMeeting(m.meeting_link)} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-semibold text-sm transition-colors text-center">
+                                            Delete
+                                        </button>
                                     </div>
                                 </div>
                             ))}

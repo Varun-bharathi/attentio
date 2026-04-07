@@ -46,6 +46,9 @@ const MeetingRoom = () => {
     const socketRef = useRef(null);
     const streamRef = useRef(null);
     const peersRef = useRef({});
+    const sessionStartRef = useRef(null);   // ISO string of when student joined
+    const statsHistoryRef = useRef([]);     // accumulates all attention snapshots
+    const reportIntervalRef = useRef(null); // 1-min report interval id
 
     const user = JSON.parse(localStorage.getItem('user'));
     const isFaculty = user?.role === 'faculty';
@@ -122,6 +125,25 @@ const MeetingRoom = () => {
                 setInMeeting(true);
                 socketRef.current.emit('join_meeting', { meeting_link: data.meeting_link, user });
                 startFrameCapture();
+
+                // Record session start time
+                sessionStartRef.current = new Date().toISOString();
+
+                // Send periodic report every 60 seconds
+                const token = localStorage.getItem('token');
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+                reportIntervalRef.current = setInterval(async () => {
+                    const latestStats = statsHistoryRef.current.slice(-1)[0];
+                    if (!latestStats) return;
+                    try {
+                        await axios.post(`${API_URL}/meeting/report`, {
+                            meeting_link: data.meeting_link,
+                            stats: latestStats
+                        }, { headers: { Authorization: `Bearer ${token}` } });
+                    } catch (err) {
+                        console.error('Periodic report error:', err.message);
+                    }
+                }, 60000);
             });
 
             socketRef.current.on('join_denied', () => {
@@ -184,6 +206,10 @@ const MeetingRoom = () => {
 
             socketRef.current.on('attention_update', (data) => {
                 setStats(prev => ({ ...prev, [data.sid]: { ...data.user, ...data.stats } }));
+                // Accumulate own stats for history (only my own sid)
+                if (data.sid === socketRef.current?.id) {
+                    statsHistoryRef.current.push(data.stats);
+                }
             });
 
         } catch (err) {
@@ -240,11 +266,11 @@ const MeetingRoom = () => {
     };
 
     const handleLeave = async () => {
+        const token = localStorage.getItem('token');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+
         if (isFaculty) {
             try {
-                const token = localStorage.getItem('token');
-                // The API URL might be imported differently in this file, let's use the standard one
-                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
                 await axios.post(`${API_URL}/meeting/end`, {
                     meeting_link: meetingId,
                     stats
@@ -254,6 +280,20 @@ const MeetingRoom = () => {
                 alert('Class Ended successfully!');
             } catch (err) {
                 console.error("Failed to end meeting properly:", err);
+            }
+        } else {
+            // Student leaving — clear interval and send summary
+            if (reportIntervalRef.current) clearInterval(reportIntervalRef.current);
+            try {
+                await axios.post(`${API_URL}/meeting/leave`, {
+                    meeting_link: meetingId,
+                    sessionStart: sessionStartRef.current,
+                    allStats: statsHistoryRef.current
+                }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            } catch (err) {
+                console.error('Leave summary error:', err.message);
             }
         }
 
