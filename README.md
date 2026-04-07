@@ -31,6 +31,10 @@ You need to create a `.env` file in the `backend` directory with the following c
 # Security
 SECRET_KEY=super-secret-key-12345
 PORT=8000
+
+# Email Reporting (Nodemailer config)
+MAIL_USER=your-email@gmail.com
+MAIL_PASS=your-app-password
 ```
 *(Note: Database connection strings like DB_HOST, DB_USER, etc., are no longer needed because the project uses SQLite, which automatically creates a local `database.sqlite` file).*
 
@@ -57,7 +61,8 @@ cd backend
 npm install
 
 # Install the required Python dependencies for the AI Module
-pip install opencv-python "numpy<2.0.0" pandas mediapipe==0.10.32 deepface "protobuf<4" tensorflow
+# (If deploying to Render, the 'postinstall' script does this automatically)
+pip install -r requirements.txt
 
 # Start the Node.js backend (with nodemon for auto-restarts)
 npm run dev
@@ -83,8 +88,9 @@ npm run dev
 
 ## ✨ Features Delivered
 - **Role Selection & Authentication**: Secure, JWT-protected user accounts, supporting distinct roles for Faculty and Students.
-- **Faculty Dashboard**: Allows educators to create and manage real-time, WebRTC-enabled online classes or meeting links effortlessly.
+- **Faculty Dashboard**: Allows educators to create, manage, and optionally **Delete** real-time, WebRTC-enabled online classes easily.
 - **Student Dashboard**: Provides students with a secure gateway to join classes and stream live video for engagement analysis.
+- **Automated Email Reporting**: The system natively uses **Nodemailer** to send automatic metrics. It quietly sends periodic 1-minute attention updates during the class and a final session summary report directly to the respective faculty via email when the student leaves.
 - **AI Attention Engine**: Real-time distraction detection utilizing bounding volume techniques via MediaPipe. Student video frames are sampled locally, securely transmitted via WebSockets to the Node backend, passed to the Python module, processed instantly in memory, and immediately discarded—ensuring strict privacy compliance.
 - **Scalability**: Employs a decoupled Socket.IO handler alongside RESTful routes, allowing connection pooling and clean, scalable real-time events.
 - **Privacy Controls**: Students will not see their own or others' attention metrics. Faculty hosts exclusively receive aggregated live statistics, keeping monitoring both effective and private.
