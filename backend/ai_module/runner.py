@@ -5,7 +5,7 @@ import io
 
 # Modify path to enable absolute imports within ai_module
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from ai_module.attention_scoring import analyze_frame
+from attention_scoring import analyze_frame
 
 # Force stdin/stdout to process line buffered
 def run_ai_service():
