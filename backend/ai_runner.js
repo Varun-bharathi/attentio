@@ -64,7 +64,7 @@ function startAI(onResult) {
 
             // Map internal import names to their pip package names specifically for this project
             const moduleMap = {
-                'cv2': 'opencv-python',
+                'cv2': 'opencv-python-headless',
                 'google': 'protobuf<4' // We know mediapipe requires protobuf<4 
             };
 
