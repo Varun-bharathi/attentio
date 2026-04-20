@@ -1,8 +1,5 @@
 services:
   - type: web
     name: my-node-app
-    env: node
+    env: docker
     plan: free
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.10.12
